@@ -1,17 +1,17 @@
-const dbURI = "mongodb+srv://Eliasito:ckroc123456789@cluster0.5kzub0s.mongodb.net/mini-notes?retryWrites=true&w=majority"
-//CUIDADO: estoy imprimiendo mi contraseña por consola, debería usar una plantilla literal e importar mi contraseña de una variable de estado.
+const mongoose = require('mongoose');
 
-const mongoose = require('mongoose')
+// Conectarse a MongoDB Atlas
+mongoose.connect(process.env.MONGODB_URI, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+});
 
-mongoose.connect(dbURI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true
-})
-    .catch(err => console.log(err)) 
+const db = mongoose.connection;
 
-mongoose.connection.once('open', _ => {
-    console.log('Database is connected to', dbURI)
-})
-mongoose.connection.on('error', err => {
-    console.log(err)
-})
+db.on('error', (error) => {
+  console.error('Error de conexión a MongoDB:', error);
+});
+
+db.once('open', () => {
+  console.log('Conexión exitosa a MongoDB Atlas');
+});
