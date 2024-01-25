@@ -51,7 +51,6 @@ app.post("/api/signup", async (req, res) => {
   }
 })
 app.post("/api/login", async (req, res) => {
-  console.log(1)
   try {
     const { username, password } = req.body
 
@@ -254,8 +253,6 @@ app.post("/api/post_notification/friend_request", async (req, res) => {
     let senderUser = await UserSchema.findOne({ username: notification.from })
     let target = await UserSchema.findOne({ username: notification.to })
 
-    console.log(senderUser)
-    console.log(target)
 
     // En el caso de que ambos se envien la notificacion al mismo tiempo
     // "mismo tiempo" => sin hacer refresh a la pagina
