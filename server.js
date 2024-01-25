@@ -738,6 +738,8 @@ app.patch("/api/change_shared_task_state", async (req, res) => {
   try {
     const { taskId, newState, kanbanName } = req.body
 
+    console.log({taskId, newState, kanbanName})
+
     let kanban = await KanbanSchema.findOne({ kanbanName })
     const taskIndex = kanban.tasks.findIndex(elem => elem._id.toString() === taskId)
     let newTask = kanban.tasks[taskIndex]
