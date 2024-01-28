@@ -8,7 +8,7 @@ const userSchema = new Schema({
   },
   password: {
     require: true,
-    type: String
+    type: Object
   },
   profilePicture: {
     type: Number,
