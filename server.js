@@ -4,7 +4,6 @@ const PORT = process.env.PORT || 8000;
 
 require("./database");
 const mongoose = require('mongoose');
-const { ObjectId } = mongoose.Types;
 
 const TaskSchema = require("./schemas/TaskSchema");
 const NoteSchema = require("./schemas/NoteSchema");
@@ -16,6 +15,12 @@ const cors = require("cors");
 const jwt = require('jsonwebtoken');
 const SECRET_KEY = require("./privateKeys")
 const bodyParser = require('body-parser');
+
+const crypto = require("crypto")
+
+const algorithm = "aes-256-cbc"
+const key = crypto.randomBytes(32)
+const initialValue = crypto.randomBytes(16)
 
 
 // Middleware
@@ -32,10 +37,17 @@ app.post("/api/signup", async (req, res) => {
   try {
     const { username, password } = req.body
 
+    // Encriptar contraseña
+    const cipher = crypto.createCipheriv(algorithm, key, initialValue)
+    const passwordEncripted = Buffer.concat([cipher.update(password), cipher.final()])
+
     if (password && username) {
       const newUser = new UserSchema({
         username,
-        password
+        password: {
+          iv: initialValue.toString("hex"),
+          encripted: passwordEncripted.toString("hex")
+        }
       })
 
       const savedUser = await newUser.save()
@@ -56,7 +68,13 @@ app.post("/api/login", async (req, res) => {
 
     const user = await UserSchema.findOne({ username })
 
-    if (user.password === password) {
+    const iv = Buffer.from(user.password.iv, "hex")
+    const encripted = Buffer.from(user.password.encripted, "hex")
+
+    const passwordDesencripted = crypto.createDecipheriv(algorithm, key, iv)
+    const passwordString = Buffer.concat([passwordDesencripted.update(encripted), passwordDesencripted.final()]).toString()
+
+    if (passwordString === password) {
       const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '48h' });
 
       res.status(200).json({ user, token })
