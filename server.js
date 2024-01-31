@@ -68,6 +68,8 @@ app.post("/api/login", async (req, res) => {
 
     const user = await UserSchema.findOne({ username })
 
+    if(!user) return res.status(404).json({message: "user not found"})
+
     const iv = Buffer.from(user.password.iv, "hex")
     const encripted = Buffer.from(user.password.encripted, "hex")
 
@@ -77,7 +79,9 @@ app.post("/api/login", async (req, res) => {
     if (passwordString === password) {
       const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '48h' });
 
-      res.status(200).json({ user, token })
+      res.status(200).json({ user, token, message: "session logged in successfully" })
+    } else {
+      res.status(404).json({message: "incorrect password"})
     }
   } catch (error) {
     res.status(500).send("internal error has ocurred");
