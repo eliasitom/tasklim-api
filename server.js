@@ -16,11 +16,7 @@ const jwt = require('jsonwebtoken');
 const SECRET_KEY = require("./privateKeys")
 const bodyParser = require('body-parser');
 
-const crypto = require("crypto")
-
-const algorithm = "aes-256-cbc"
-const key = crypto.randomBytes(32)
-const initialValue = crypto.randomBytes(16)
+const bcrypt = require("bcrypt")
 
 
 // Middleware
@@ -38,16 +34,12 @@ app.post("/api/signup", async (req, res) => {
     const { username, password } = req.body
 
     // Encriptar contraseña
-    const cipher = crypto.createCipheriv(algorithm, key, initialValue)
-    const passwordEncripted = Buffer.concat([cipher.update(password), cipher.final()])
+    const passwordHash = await bcrypt.hash(password, 8)
 
     if (password && username) {
       const newUser = new UserSchema({
         username,
-        password: {
-          iv: initialValue.toString("hex"),
-          encripted: passwordEncripted.toString("hex")
-        }
+        password: passwordHash
       })
 
       const savedUser = await newUser.save()
@@ -70,13 +62,10 @@ app.post("/api/login", async (req, res) => {
 
     if(!user) return res.status(404).json({message: "user not found"})
 
-    const iv = Buffer.from(user.password.iv, "hex")
-    const encripted = Buffer.from(user.password.encripted, "hex")
+    //Comparar contraseña con el hash
+    const isEqual = await bcrypt.compare(password, user.password)
 
-    const passwordDesencripted = crypto.createDecipheriv(algorithm, key, iv)
-    const passwordString = Buffer.concat([passwordDesencripted.update(encripted), passwordDesencripted.final()]).toString()
-
-    if (passwordString === password) {
+    if (isEqual) {
       const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '48h' });
 
       res.status(200).json({ user, token, message: "session logged in successfully" })
