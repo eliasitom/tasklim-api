@@ -3,7 +3,6 @@ const app = express();
 const PORT = process.env.PORT || 8000;
 
 require("./database");
-const mongoose = require('mongoose');
 
 const TaskSchema = require("./schemas/TaskSchema");
 const NoteSchema = require("./schemas/NoteSchema");
@@ -13,7 +12,6 @@ const KanbanSchema = require("./schemas/KanbanSchema")
 const cors = require("cors");
 
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = require("./privateKeys")
 const bodyParser = require('body-parser');
 
 const bcrypt = require("bcrypt")
@@ -43,7 +41,7 @@ app.post("/api/signup", async (req, res) => {
       })
 
       const savedUser = await newUser.save()
-      const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '24h' });
+      const token = jwt.sign({ username }, process.env.SECRET_KEY, { expiresIn: '24h' });
 
       res.status(200).json({ token, user: savedUser })
     } else {
@@ -66,7 +64,7 @@ app.post("/api/login", async (req, res) => {
     const isEqual = await bcrypt.compare(password, user.password)
 
     if (isEqual) {
-      const token = jwt.sign({ username }, SECRET_KEY, { expiresIn: '48h' });
+      const token = jwt.sign({ username }, process.env.SECRET_KEY, { expiresIn: '48h' });
 
       res.status(200).json({ user, token, message: "session logged in successfully" })
     } else {
@@ -82,7 +80,7 @@ app.get("/api/verify_user/:token", async (req, res) => {
   try {
     const token = req.params.token
 
-    jwt.verify(token, SECRET_KEY);
+    jwt.verify(token, process.env.SECRET_KEY);
     
   
     res.status(200).json({ message: "valid token" })
